@@ -1,9 +1,12 @@
-//jshint esversion:6
+require('dotenv').config()
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const exp = require("constants");
 const mongoose = require("mongoose");
+const mongooseEncryption = require("mongoose-encryption");
+
+const secret = process.env.SECRET;
 
 mongoose.connect("mongodb://0.0.0.0:27017/userDB")
     .then(console.log("Connected to DB"))
@@ -19,9 +22,13 @@ const userSchema = new mongoose.Schema({
     password: String
 })
 
+userSchema.plugin(mongooseEncryption, {secret : secret , encryptedFields : ["password"]});
+
 const User = mongoose.model("User", userSchema)
 
+
 app.route("/")
+
     .get( (req, res) => {
         res.render("home");
     })
@@ -43,7 +50,8 @@ app.route("/register")
             .catch((err) => {console.log("Error in Registration: " + err)});
         })
         
-        app.route("/login")
+        
+app.route("/login")
 
     .get( (req, res) => {
         res.render("login");
