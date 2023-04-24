@@ -6,6 +6,8 @@ const exp = require("constants");
 const mongoose = require("mongoose");
 const mongooseEncryption = require("mongoose-encryption");
 const md5 = require("md5");
+const bcrypt = require("bcrypt");
+const saltRounds = 15;
 
 
 const secret = process.env.SECRET;
@@ -43,33 +45,40 @@ app.route("/register")
     })
 
     .post( (req, res) => {
-        const newUser = User({
-            email: req.body.username,
-            password: md5(req.body.password)
+
+        bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
+            const newUser = User({
+                email: req.body.username,
+                password: hash
+            });
+            newUser.save()
+                .then(console.log("New User Added"), res.render("secrets"))
+                .catch((err) => {console.log("Error in Registration: " + err)});
+            })
         });
-        newUser.save()
-            .then(console.log("New User Added"), res.render("secrets"))
-            .catch((err) => {console.log("Error in Registration: " + err)});
-        })
+
         
         
 app.route("/login")
 
     .get( (req, res) => {
+
         res.render("login");
+
     })
     
     .post( (req, res) => {
+
         const username = req.body.username;
-        const password = md5(req.body.password);
+        const password = req.body.password;
         User.findOne({email: username})
             .then( (user) => {
-                // console.log(user.password);
-                // console.log(password);
-                if (user.password == password) {
-                    console.log(user)
-                    res.render("secrets")
-                }
+                bcrypt.compare(password, user.password, function(err, result) {
+                    if (result === true) {
+                        console.log(user)
+                        res.render("secrets")
+                    }
+                });
             } )
         .catch((err) => {console.log("Error in Logging in: " + err)});
     })
