@@ -5,6 +5,8 @@ const ejs = require("ejs");
 const exp = require("constants");
 const mongoose = require("mongoose");
 const mongooseEncryption = require("mongoose-encryption");
+const md5 = require("md5");
+
 
 const secret = process.env.SECRET;
 
@@ -43,7 +45,7 @@ app.route("/register")
     .post( (req, res) => {
         const newUser = User({
             email: req.body.username,
-            password: req.body.password
+            password: md5(req.body.password)
         });
         newUser.save()
             .then(console.log("New User Added"), res.render("secrets"))
@@ -59,7 +61,7 @@ app.route("/login")
     
     .post( (req, res) => {
         const username = req.body.username;
-        const password = req.body.password;
+        const password = md5(req.body.password);
         User.findOne({email: username})
             .then( (user) => {
                 // console.log(user.password);
